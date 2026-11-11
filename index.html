@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>မြန်မာ့ဂလုံးဂလုံး ငွေရဂိမ်း</title>
+<style>
+body{background:#1a4314;color:#fff;text-align:center;font-family:Arial,sans-serif;margin:0;padding:10px;}
+.card{background:rgba(0,0,0,0.7);border:2px solid #ffcc00;border-radius:12px;padding:15px;max-width:280px;margin:12px auto;box-shadow:0 4px 10px rgba(0,0,0,0.5);}
+input{padding:8px;font-size:15px;border-radius:6px;border:1px solid #ffcc00;text-align:center;box-sizing:border-box;width:100%;background:#222;color:#fff;}
+.btn{background:#28a745;color:white;font-size:16px;font-weight:bold;padding:10px;border:none;border-radius:8px;cursor:pointer;width:100%;margin-top:8px;}
+.tab{background:#444;color:#fff;border:none;padding:8px 15px;cursor:pointer;font-weight:bold;border-radius:5px;margin:5px;}
+.tab.active{background:#ffcc00;color:#000;}
+.dice{width:50px;height:50px;background:#fff;color:#000;font-size:26px;font-weight:bold;display:flex;align-items:center;justify-content:center;border-radius:8px;}
+.b-btn{padding:12px;font-size:15px;font-weight:bold;background:#2c6b2f;color:white;border:2px solid #ffcc00;border-radius:8px;cursor:pointer;}
+.b-btn.selected{background:#ffcc00;color:#000;}
+.dice.shaking { animation: shake 0.1s infinite; background: #ffeb3b; }
+@keyframes shake { 0% { transform: translate(2px, 2px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(2px, -2px); } }
+.amt-ctrl-btn { background: #ff9800; color: white; border: none; font-size: 18px; font-weight: bold; width: 35px; height: 35px; border-radius: 6px; cursor: pointer; vertical-align: middle; }
+.guide-card { background: rgba(0,0,0,0.9); border: 1px solid #ffcc00; border-radius: 10px; padding: 15px; text-align: left; font-size: 13px; line-height: 1.6; max-width: 300px; margin: 15px auto; color: #eee; }
+.guide-card h4 { color: #ffcc00; margin: 5px 0 10px 0; text-align: center; border-bottom: 1px dashed #ffcc00; padding-bottom: 5px; }
+.contact-box { margin-top: 15px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.admin-link { display: inline-block; background: #000; color: #ffcc00; border: 1px solid #ffcc00; padding: 7px 12px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 13px; width: 220px; text-align: center; }
+.admin-link.tele { background: #0088cc; color: #fff; border-color: #0088cc; }
+select { padding: 8px; font-size: 14px; border-radius: 6px; border: 1px solid #ffcc00; background: #222; color: #fff; width: 100%; box-sizing: border-box; margin-top: 5px; }
+</style>
+</head>
+<body>
+
+<audio id="bgm" loop preload="auto" src="https://actions.google.com/sounds/v1/ambiences/casino_room.ogg"></audio>
+<audio id="clickSound" preload="auto" src="https://actions.google.com/sounds/v1/interactive/button_press.ogg"></audio>
+<audio id="winSound" preload="auto" src="https://actions.google.com/sounds/v1/ui/positive_bell_notification.ogg"></audio>
+
+<!-- ဝင်ရောက်ရန် / အကောင့်ဖွင့်ရန် -->
+<div id="auth" style="display:block;">
+<h2>🎲 ဂလုံးဂလုံး 🎲</h2>
+<div class="card">
+<div><button class="tab active" id="t1" onclick="st('l')">ဝင်</button><button class="tab" id="t2" onclick="st('r')">အသစ်</button></div>
+<div id="fL">
+<h3>ဝင်ရန်</h3>
+<input type="text" id="lU" placeholder="အမည်"><br><br>
+<input type="password" id="lP" placeholder="စကားဝှက်" maxlength="10"><br><br>
+<button class="btn" onclick="log()">ဝင်မည်</button>
+</div>
+<div id="fR" style="display:none;">
+<h3>အသစ်ဖွင့်ရန်</h3>
+<input type="text" id="rU" placeholder="အမည်"><br><br>
+<input type="text" id="rPh" placeholder="ဖုန်းနံပါတ်"><br><br>
+<input type="password" id="rP" placeholder="စကားဝှက် (၆ လုံး)" maxlength="6"><br><br>
+<button class="btn" onclick="reg()">ဖွင့်မည်</button>
+</div>
+</div>
+</div>
+
+<!-- Admin ထိန်းချုပ်ရေး -->
+<div id="adm" style="display:none;">
+<h2>👑 Admin ထိန်းချုပ်ရေးစနစ်</h2>
+<div class="card" style="border-color:#ff9800;">
+<p style="font-size:13px;color:#ffcc00;margin:5px 0;">ကစားသူများသို့ ငွေဖြည့်ရန်</p>
+ကစားသူအမည်:<br><input type="text" id="aU" placeholder="User Name"><br><br>
+ဖြည့်မည့်ငွေပမာဏ:<br><input type="number" id="aA" placeholder="Amount"><br><br>
+<button class="btn" style="background:#ff9800;" onclick="aAdd()">ငွေဖြည့်ပေးမည်</button>
+</div>
+
+<div class="card" style="border-color:#00ffcc; margin-top:15px;">
+<p style="font-size:13px;color:#00ffcc;margin:5px 0;">🎮 ဂိမ်း အရှုံး/အနိုင် ထိန်းညှိရန်</p>
+မုဒ်ရွေးချယ်ရန်:<br>
+<select id="rigMode" onchange="changeRigMode()">
+    <option value="random">ပုံမှန်အတိုင်း (Random)</option>
+    <option value="win">ကစားသူ အမြဲနိုင်စေရန် (Always Win)</option>
+    <option value="lose">ကစားသူ အမြဲရှုံးစေရန် (Always Lose)</option>
+</select>
+<button class="btn" style="background:#dc3545; margin-top:15px;" onclick="out()">Admin မှ ထွက်မည်</button>
+</div>
+</div>
+
+<!-- ပင်မဝိုင်းရွေးချယ်ရန် -->
+<div id="home" style="display:none;">
+<div style="background:rgba(0,0,0,0.5);padding:8px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+<span>👤 <strong id="uD"></strong></span>
+<button style="background:#dc3545;color:#fff;border:none;padding:5px 10px;border-radius:5px;" onclick="out()">ထွက်</button>
+</div>
+<h2>ဝိုင်းရွေးရန်</h2>
+<div style="background:rgba(0,0,0,0.4);padding:6px;border-radius:8px;display:inline-block;">လက်ကျန်: <span id="hB">0</span> ကျပ်</div>
+
+<div class="card">
+<h3>🥉 ဂျူနီယာဝိုင်း</h3>
+<p style="font-size:13px;margin:5px 0;">100 - 1,000 ကျပ်</p>
+<button class="btn" onclick="room(100,1000,[100,500,1000])">ဝင်မည်</button>
+</div>
+
+<div class="card">
+<h3>🥈 စီနီယာဝိုင်း</h3>
+<p style="font-size:13px;margin:5px 0;">1,000 - 10,000 ကျပ်</p>
+<button class="btn" onclick="room(1000,10000,[1000,5000,10000])">ဝင်မည်</button>
+</div>
+
+<div class="card" style="border-color:#ff0055;">
+<h3 style="color:#ff0055;">👑 ဘော့ဝိုင်း (VIP)</h3>
+<p style="font-size:13px;margin:5px 0;">10,000 - 100,000+ ကျပ်</p>
+<button class="btn" style="background:#dc3545;" onclick="room(10000,100000,[10000,20000,50000,100000])">ဝင်မည်</button>
+</div>
+
+<div class="contact-box">
+    <a href="https://www.tiktok.com/@user342236795?_r=1&_t=ZS-9BJRXGvGmh7" target="_blank" class="admin-link">TikTok ဖြင့် ဆက်သွယ်ရန်</a>
+    <a href="https://t.me/Pxyo14765" target="_blank" class="admin-link tele">Telegram ဖြင့် ဆက်သွယ်ရန်</a>
+</div>
+</div>
+
+<!-- ကစားကွက် -->
+<div id="game" style="display:none;">
+<button style="background:#6c757d;color:#fff;padding:6px 12px;border:none;border-radius:6px;float:left;" onclick="leave()">⬅️ Home</button>
+<button style="background:#17a2b8;color:#fff;padding:6px 12px;border:none;border-radius:6px;float:right;cursor:pointer;" onclick="toggleGuide()">📖 လမ်းညွှန်</button>
+<div style="clear:both;"></div>
+
+<div id="guideBox" class="guide-card" style="display:none;">
+    <h4>🎲 မြန်မာ့ဂလုံးဂလုံး ကစားနည်း လမ်းညွှန်</h4>
+    မင်္ဂလာပါခင်ဗျာ။ ပျော်ရွှင်စွာ ဆော့ကစားနိုင်ရန် ကစားနည်းစည်းမျဉ်းများ -<br><br>
+    <b>၁။ အချိန်နှင့် စည်းမျဉ်း:</b><br>
+    - ပွဲစဉ်တစ်ပွဲလျှင် (၁၅) စက္ကန့် အချိန်ပေးထားပါတယ်။<br><br>
+    <b>၂။ အလျော်အစား နှုန်းထားများ:</b><br>
+    - <b>အကြီး / အသေး / စုံ / မ / ဖဲထွက် (တူ):</b> ၁ ဆ ရရှိပါမည်။<br>
+    - <b>သုံးလုံးတူ:</b> ၃ ဆ ရရှိပါမည်။
+</div>
+
+<h3>ကစားကွက်</h3>
+<div style="background:rgba(0,0,0,0.4);padding:6px;border-radius:8px;display:inline-block;">လက်ကျန်: <span id="gB">0</span> ကျပ်</div>
+<div style="color:#ff4d4d;font-weight:bold;margin:10px;">⏳ ကျန်ချိန်: <span id="tm">15</span> စက္ကန့်</div>
+<div style="display:flex;justify-content:center;gap:10px;margin:10px 0;">
+<div class="dice" id="d1">?</div><div class="dice" id="d2">?</div><div class="dice" id="d3">?</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:300px;margin:10px auto;">
+<button class="b-btn" onclick="selectBet('အကြီး')" id="b-အကြီး">အကြီး</button>
+<button class="b-btn" onclick="selectBet('အသေး')" id="b-အသေး">အသေး</button>
+<button class="b-btn" onclick="select_bet('စုံ')" id="b-စုံ">စုံ</button>
+<button class="b-btn" onclick="selectBet('စုံ')" id="b-စုံ">စုံ</button>
+<button class="b-btn" onclick="selectBet('မ')" id="b-မ">မ</button>
+<button class="b-btn" onclick="selectBet('ဖဲထွက်')" id="b-ဖဲထွက်">တူ</button>
+<button class="b-btn" onclick="selectBet('သုံးလုံးတူ')" id="b-သုံးလုံးတူ">သုံးလုံးတူ</button>
+</div>
+<div style="margin: 8px 0;">
+    လောင်းကြေး: 
+    <button class="amt-ctrl-btn" onclick="changeAmt(-stepVal)">-</button>
+    <input type="number" id="bAmt" value="100" style="width:100px;">
+    <button class="amt-ctrl-btn" onclick="changeAmt(stepVal)">+</button>
+</div>
+<div id="qC" style="display:flex;justify-content:center;gap:6px;margin:6px 0;flex-wrap:wrap;"></div>
+<div id="msg" style="font-weight:bold;margin-top:10px;"></div>
+</div>
+
+<script>
+let u="", b=0, tm=15, tI, minBetVal=100, maxBetVal=1000, stepVal=100, selectedChoice="";
+
+function getUserId() {
+    let tid = localStorage.getItem("device_uid");
+    if (!tid) {
+        tid = "dev_" + Math.random().toString(36).substring(2, 11);
+        localStorage.setItem("device_uid", tid);
+    }
+    return tid;
+}
+
+function playSound(type) {
+    try {
+        let s = document.getElementById(type);
+        if(s) { s.currentTime = 0; s.play().catch(e => {}); }
+    } catch(err) {}
+}
+
+function startBGM() {
+    let bgm = document.getElementById('bgm');
+    if(bgm) { bgm.volume = 0.4; bgm.play().catch(e => {}); }
+}
+
+function toggleGuide() {
+    playSound('clickSound');
+    let g = document.getElementById('guideBox');
+    g.style.display = (g.style.display === 'none') ? 'block' : 'none';
+}
+
+function st(t) {
+    playSound('clickSound');
+    startBGM();
+    if(t==='l') {
+        document.getElementById('fL').style.display='block';
+        document.getElementById('fR').style.display='none';
+        document.getElementById('t1').classList.add('active');
+        document.getElementById('t2').classList.remove('active');
+    } else {
+        document.getElementById('fL').style.display='none';
+        document.getElementById('fR').style.display='block';
+        document.getElementById('t2').classList.add('active');
+        document.getElementById('t1').classList.remove('active');
+    }
+}
+
+function reg() {
+    playSound('clickSound');
+    startBGM();
+    let n = document.getElementById('rU').value.trim();
+    let p = document.getElementById('rPh').value.trim();
+    let w = document.getElementById('rP').value.trim();
+    let devKey = getUserId();
+
+    if(!n || !p || !w) { alert("အချက်အလက်ဖြည့်ပါ"); return; }
+    if(w.length !== 6) { alert("စကားဝှက် ၆ လုံးဖြစ်ရမည်"); return; }
+    
+    if(localStorage.getItem(devKey + "_p_" + n)) { alert("ဤအမည်ဖြင့် အကောင့်ရှိပြီးသားပါ"); return; }
+    
+    localStorage.setItem(devKey + "_p_" + n, w);
+    localStorage.setItem(devKey + "_b_" + n, 0);
+    alert("အကောင့်ဖွင့်ပြီးပါပြီ");
+    st('l');
+}
+
+function log() {
+    playSound('clickSound');
+    startBGM();
+    let n = document.getElementById('lU').value.trim();
+    let w = document.getElementById('lP').value.trim();
+    let devKey = getUserId();
+
+    if(n.toLowerCase() === 'admin' && w === 'admin123') {
+        u = 'admin';
+        sc('adm');
+        let currentMode = localStorage.getItem('global_rigMode') || 'random';
+        document.getElementById('rigMode').value = currentMode;
+        return;
+    }
+
+    let sp = localStorage.getItem(devKey + "_p_" + n);
+    if(!sp || sp !== w) { alert("အမည် သို့မဟုတ် စကားဝှက် မှားနေသည်"); return; }
+    u = n;
+    load();
+    sc('home');
+}
+
+function out() {
+    playSound('clickSound');
+    u = "";
+    let bgm = document.getElementById('bgm');
+    if(bgm) bgm.pause();
+    sc('auth');
+}
+
+function load() {
+    let devKey = getUserId();
+    b = parseInt(localStorage.getItem(devKey + "_b_" + u)) || 0;
+    document.getElementById('uD').innerText = u;
+    document.getElementById('hB').innerText = b.toLocaleString();
+    document.getElementById('gB').innerText = b.toLocaleString();
+}
+
+function sc(s) {
+    ['auth','adm','home','game'].forEach(i => {
+        document.getElementById(i).style.display = (i === s) ? 'block' : 'none';
+    });
+}
+
+function aAdd() {
+    playSound('clickSound');
+    let x = document.getElementById('aU').value.trim();
+    let a = parseInt(document.getElementById('aA').value);
+    let devKey = getUserId();
+
+    if(!x || isNaN(a) || a <= 0) { alert("အမည်နှင့် မှန်ကန်သော ငွေပမာဏ ထည့်ပါ"); return; }
+    let cb = parseInt(localStorage.getItem(devKey + "_b_" + x));
+    if(isNaN(cb)) { alert("ဤအမည်ဖြင့် ကစားသူအကောင့် မရှိပါ"); return; }
+    
+    localStorage.setItem(devKey + "_b_" + x, cb + a);
+    alert(`အောင်မြင်ပါသည်! '${x}' ၏ လက်ကျန်ငွေထဲသို့ ${a.toLocaleString()} ကျပ် ဖြည့်ပြီးပါပြီ။`);
+    document.getElementById('aU').value = "";
+    document.getElementById('aA').value = "";
+}
+
+function changeRigMode() {
+    let mode = document.getElementById('rigMode').value;
+    localStorage.setItem('global_rigMode', mode);
+    alert("ဂိမ်း အရှုံး/အနိုင် မုဒ်ကို ပြောင်းလဲပြီးပါပြီ!");
+}
+
+function room(mi, ma, q) {
+    playSound('clickSound');
+    startBGM();
+    load();
+    if(b < mi) { 
+        alert(`လက်ကျန်ငွေ မလုံလောက်ပါ. ဤဝိုင်းသို့ ဝင်ရန် အနည်းဆုံး ${mi.toLocaleString()} ကျပ် ရှိရပါမည်!`); 
+        return; 
+    }
+    minBetVal = mi; maxBetVal = ma;
+    stepVal = (mi >= 10000) ? 10000 : (mi >= 1000 ? 1000 : 100);
+    
+    document.getElementById('bAmt').value = mi;
+    let qc = document.getElementById('qC');
+    qc.innerHTML = "";
+    q.forEach(qVal => {
+        let btn = document.createElement('button');
+        btn.style.cssText = "background:#17a2b8;color:#fff;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-weight:bold;font-size:12px;";
+        btn.innerText = qVal.toLocaleString() + " ကျပ်";
+        btn.onclick = () => { playSound('clickSound'); document.getElementById('bAmt').value = qVal; };
+        qc.appendChild(btn);
+    });
+    sc('game');
+    startTimer();
+}
+
+function changeAmt(val) {
+    playSound('clickSound');
+    let amtInput = document.getElementById('bAmt');
+    let current = parseInt(amtInput.value) || minBetVal;
+    current += val;
+    if(current < minBetVal) current = minBetVal;
+    if(current > b) current = b;
+    amtInput.value = current;
+}
+
+function leave() { 
+    playSound('clickSound');
+    clearInterval(tI); 
+    sc('home'); 
+    load(); 
+}
+
+function selectBet(ch) {
+    playSound('clickSound');
+    selectedChoice = ch;
+    ['အကြီး','အသေး','စုံ','မ','ဖဲထွက်','သုံးလုံးတူ'].forEach(x => {
+        let btn = document.getElementById('b-'+x);
+        if(x === ch) btn.classList.add('selected');
+        else btn.classList.remove('selected');
+    });
+}
+
+function startTimer() {
+    tm = 15;
+    selectedChoice = "";
+    document.getElementById('tm').innerText = tm;
+    document.getElementById('msg').innerText = "";
+    document.getElementById('d1').innerText = "?";
+    document.getElementById('d2').innerText = "?";
+    document.getElementById('d3').innerText = "?";
+    document.getElementById('guideBox').style.display = 'none';
+
+    ['အကြီး','အသေး','စုံ','မ','ဖဲထွက်','သုံးလုံးတူ'].forEach(x => {
+        document.getElementById('b-'+x).classList.remove('selected');
+        document.getElementById('b-'+x).disabled = false;
+    });
+
+    clearInterval(tI);
+    tI = setInterval(() => {
+        tm--;
+        document.getElementById('tm').innerText = tm;
+        if(tm <= 0) {
+            clearInterval(tI);
+            runRoll();
+        }
+    }, 1000);
+}
+
+function runRoll() {
+    let amt = parseInt(document.getElementById('bAmt').value);
+    let devKey = getUserId();
+    
+    ['အကြီး','အသေး','စုံ','မ','ဖဲထွက်','သုံးလုံးတူ'].forEach(x => {
+        document.getElementById('b-'+x).disabled = true;
+    });
+
+    if(!selectedChoice) selectedChoice = 'အကြီး';
+
+    let d1E = document.getElementById('d1'), d2E = document.getElementById('d2'), d3E = document.getElementById('d3');
+    d1E.classList.add("shaking"); d2E.classList.add("shaking"); d3E.classList.add("shaking");
+
+    let sI = setInterval(() => {
+        d1E.innerText = Math.floor(Math.random()*6)+1;
+        d2E.innerText = Math.floor(Math.random()*6)+1;
+        d3E.innerText = Math.floor(Math.random()*6)+1;
+    }, 80);
+
+    setTimeout(() => {
+        clearInterval(sI);
+        d1E.classList.remove("shaking"); d2E.classList.remove("shaking"); d3E.classList.remove("shaking");
+        
+        let d1, d2, d3;
+        let mode = localStorage.getItem('global_rigMode') || 'random';
+
+        if (mode === 'win') {
+            if (selectedChoice === 'အကြီး') { d1 = 4; d2 = 4; d3 = 4; }
+            else if (selectedChoice === 'အသေး') { d1 = 2; d2 = 2; d3 = 2; }
+            else if (selectedChoice === 'စုံ') { d1 = 2; d2 = 2; d3 = 2; }
+            else if (selectedChoice === 'မ') { d1 = 1; d2 = 1; d3 = 1; }
+            else if (selectedChoice === 'ဖဲထွက်') { d1 = 5; d2 = 5; d3 = 1; }
+            else if (selectedChoice === 'သုံးလုံးတူ') { d1 = 3; d2 = 3; d3 = 3; }
+            else { d1 = 4; d2 = 4; d3 = 4; }
+        } else if (mode === 'lose') {
+            if (selectedChoice === 'အကြီး') { d1 = 1; d2 = 1; d3 = 1; }
+            else if (selectedChoice === 'အသေး') { d1 = 6; d2 = 6; d3 = 5; }
+            else if (selectedChoice === 'စုံ') { d1 = 1; d2 = 1; d3 = 1; }
+            else if (selectedChoice === 'မ') { d1 = 2; d2 = 2; d3 = 2; }
+            else if (selectedChoice === 'ဖဲထွက်') { d1 = 1; d2 = 2; d3 = 3; }
+            else if (selectedChoice === 'သုံးလုံးတူ') { d1 = 1; d2 = 2; d3 = 3; }
+            else { d1 = 1; d2 = 1; d3 = 1; }
+        } else {
+            d1 = Math.floor(Math.random() * 6) + 1;
+            d2 = Math.floor(Math.random() * 6) + 1;
+            d3 = Math.floor(Math.random() * 6) + 1;
+        }
+        
+        d1E.innerText = d1; d2E.innerText = d2; d3E.innerText = d3;
+        
+        let sum = d1 + d2 + d3;
+        let isEv = (sum % 2 === 0);
+        let isTr = (d1 === d2 && d2 === d3);
+        let isDb = (d1 === d2 || d2 === d3 || d1 === d3);
+        let win = false;
+        
+        if(selectedChoice === 'အကြီး') {
+            win = (!isTr && sum >= 11 && sum <= 17);
+        } else if(selectedChoice === 'အသေး') {
+            win = (!isTr && sum >= 4 && sum <= 10);
+        } else if(selectedChoice === 'စုံ') {
+            win = (!isTr && isEv);
+        } else if(selectedChoice === 'မ') {
+            win = (!isTr && !isEv);
+        } else if(selectedChoice === 'ဖဲထွက်') {
+            win = isDb;
+        } else if(selectedChoice === 'သုံးလုံးတူ') {
+            win = isTr;
+        }
+
+        let md = document.getElementById('msg');
+        let msg = `ထွက်: ${d1},${d2},${d3} (${sum}) - `;
+
+        if(isNaN(amt) || amt < minBetVal) {
+            md.style.color = "#ffcc00";
+            md.innerText = msg + `လောင်းကြေး မမှန်ကန်ပါ`;
+        } else if(amt > b) {
+            md.style.color = "#ff4d4d";
+            md.innerText = msg + `လက်ကျန်ငွေ မလုံလောက်ပါ`;
+        } else {
+            b -= amt;
+            if(win) {
+                let payout = (selectedChoice === 'သုံးလုံးတူ') ? (amt * 3) : (amt * 2);
+                b += payout;
+                md.style.color = "#00ffcc";
+                md.innerText = msg + `နိုင်ပါသည် (+${(payout-amt).toLocaleString()} ကျပ်)`;
+                playSound('winSound');
+            } else {
+                md.style.color = "#ff4d4d";
+                md.innerText = msg + `ရှုံးပါသည် (-${amt.toLocaleString()} ကျပ်)`;
+            }
+            localStorage.setItem(devKey + "_b_" + u, b);
+            load();
+        }
+
+        setTimeout(startTimer, 4000);
+    }, 1500);
+}
+</script>
+</body>
+      </html>
+      
